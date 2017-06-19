@@ -1,0 +1,96 @@
+<!DOCTYPE html>
+
+<html>
+
+   <head>
+      <style>
+
+         body {
+	      background-color: #000;
+	      margin: 0px;
+	      overflow: hidden;
+         }
+
+      </style>
+   </head>
+
+<body>
+
+   <script src="three.js"></script>
+   <script src="OrbitControls.js"></script>
+
+   <script>
+
+      var renderer, scene, camera, parent, controls, geometry, material, geometry2, material2, grandparent;
+      var geometryEdges, materialEdges, segments, vertices;
+
+      init();
+      animate();
+
+      function init() {
+
+         //Renderer
+	 renderer = new THREE.WebGLRenderer();
+	 renderer.setSize( window.innerWidth, window.innerHeight );
+	 document.body.appendChild( renderer.domElement );
+
+	 //Scene
+	 scene = new THREE.Scene();
+	
+	 //Camera
+	 camera = new THREE.PerspectiveCamera( 40, window.innerWidth / window.innerHeight, 1, 1000 );
+	 camera.position.set( 20, 20,20 );
+	
+         camera.lookAt({x:0,y:0,z:0});
+
+	 //Orbit controls allow the mouse to be used to alter the position of view.
+	 controls = new THREE.OrbitControls( camera, renderer.domElement );
+	
+	 //Axes
+	 scene.add(new THREE.AxisHelper(20));
+
+         //Grandparent.  A sphere that provides a surface for the tangent line.
+         geometry = new THREE.SphereGeometry( 5, 50, 50 );
+	 material = new THREE.MeshNormalMaterial({transparent:true,opacity:0.5});
+	 grandparent = new THREE.Mesh( geometry, material );
+         scene.add( grandparent );
+
+         //Make the surface's mesh visible.  (This is to show that the sphere doesn't rotate.)
+         geometryEdges = new THREE.EdgesGeometry( grandparent.geometry ); 
+         materialEdges = new THREE.LineBasicMaterial( { color: 0xffffff, linewidth: 1 } );
+         segments = new THREE.LineSegments( geometryEdges, materialEdges );
+         grandparent.add( segments );
+
+         //Parent.  A line representing a tangent to the sphere's surface.
+	 geometry2 = new THREE.BufferGeometry();
+
+         vertices = new Float32Array( [
+	    5.0, 3.5,  -1.0,
+	    5.0, 3.5,  1.0
+         ] );
+
+         geometry2.addAttribute( 'position', new THREE.BufferAttribute( vertices, 3 ) );      
+         
+	 material2 = new THREE.LineBasicMaterial();
+	 parent = new THREE.Line( geometry2, material2 );
+	 grandparent.add(parent);
+
+      }
+
+      //An infinite loop to perform the animation, and to allow the camera to be controlled with the mouse.
+      function animate() {
+
+         //Rotate the line around the sphere.
+         parent.rotateY(0.1); 
+
+         //Translate the surface i.e. the sphere.
+         grandparent.translateOnAxis({x:1/Math.sqrt(3),y:1/Math.sqrt(3),z:-1/Math.sqrt(3)},0.03);  
+
+         requestAnimationFrame( animate );
+
+         renderer.render( scene, camera );  // (This performs matrix updating automatically.)
+
+      }
+</script>
+</body>
+</html>
